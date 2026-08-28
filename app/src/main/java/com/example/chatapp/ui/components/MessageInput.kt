@@ -2,7 +2,6 @@ package com.example.chatapp.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -16,31 +15,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-
 @Composable
- fun MessageInput(
+fun MessageInput(
     text: String,
     onTextChanged: (String) -> Unit,
-    onSend: () -> Unit
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .padding(8.dp),
+
         verticalAlignment =
             Alignment.CenterVertically
     ) {
 
         OutlinedTextField(
             value = text,
+
             onValueChange =
                 onTextChanged,
+
             modifier =
                 Modifier.weight(1f),
+
             placeholder = {
                 Text("Message...")
             },
+
             maxLines = 4
         )
 
@@ -57,6 +60,7 @@ import androidx.compose.ui.unit.dp
             Icon(
                 imageVector =
                     Icons.AutoMirrored.Filled.Send,
+
                 contentDescription =
                     "Send"
             )
