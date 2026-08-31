@@ -2,22 +2,22 @@ package com.example.chatapp.ui.home
 
 
 
-sealed interface HomeScreenUiEvent {
+sealed interface HomeScreenEvent {
 
     data class NavigateToChat(
         val chatId: String,
         val userId: String,
         val userName: String,
         val profileImageUrl: String
-    ) : HomeScreenUiEvent
+    ) : HomeScreenEvent
 
-    data object NavigateToNewChat : HomeScreenUiEvent
+    data object NavigateToNewChat : HomeScreenEvent
 
-    data object NavigateToLogin : HomeScreenUiEvent
+    data object NavigateToLogin : HomeScreenEvent
 
     data class ShowError(
         val message: String
-    ) : HomeScreenUiEvent
+    ) : HomeScreenEvent
 
-    data object LogoutClicked : HomeScreenUiEvent
+    data object LogoutClicked : HomeScreenEvent
 }

@@ -2,6 +2,7 @@ package com.example.chatapp.ui.chat
 
 import android.Manifest
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +43,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.example.chatapp.AppRoutes
+import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.ui.components.MessageInput
 import com.example.chatapp.ui.components.MessageItem
 import java.io.File
@@ -50,11 +59,58 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    userName: String,
-    profileImageUrl: String,
-    uiState: ChatUiState,
-    onEvent: (ChatUiEvent) -> Unit
+    args: AppRoutes.ChatRoute,
+   viewModel: ChatViewModel,
+    navController: NavController
 ) {
+
+    val showLoader  = remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState
+        .collectAsStateWithLifecycle()
+
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+    val  chatId = args.chatId.orEmpty()
+    val userId = args.userId.orEmpty()
+    val userName = args.userName.orEmpty()
+    val profileImageUrl = args.profileImageUrl.orEmpty()
+
+    LaunchedEffect(chatId) {
+        viewModel.initialize(
+            chatId,
+            receiverId = userId
+        )
+    }
+
+    LaunchedEffect(Unit) {
+
+        viewModel.uiEvent.flowWithLifecycle(lifecycleOwner.lifecycle, Lifecycle.State.STARTED ).collect { event ->
+
+            showLoader.value = false;
+            when (event) {
+
+                is CommonUiEvent.PopBackStack -> {
+                    navController.popBackStack()
+                }
+                is CommonUiEvent.ShowLoader -> {
+                    showLoader.value = true
+                }
+                is CommonUiEvent.Navigate -> {
+                    navController.navigate(event.route)
+                }
+                is CommonUiEvent.DoNothing->{
+
+                    showLoader.value = false
+
+                }
+                is CommonUiEvent.ShowToast -> {
+                    Toast.makeText(context , event.msg , Toast.LENGTH_SHORT ).show()
+                }
+                else-> Unit
+            }
+        }
+    }
 
     val listState = rememberLazyListState()
 
@@ -71,7 +127,6 @@ fun ChatScreen(
         }
     }
 
-    val context = LocalContext.current
 
     /*
      * URI used by the camera.
@@ -116,7 +171,7 @@ fun ChatScreen(
 
             uri?.let {
 
-                onEvent(
+                viewModel.onEvent(
                     ChatUiEvent.ImageSelected(it)
                 )
             }
@@ -134,7 +189,7 @@ fun ChatScreen(
 
                 cameraUri?.let { uri ->
 
-                    onEvent(
+                    viewModel.onEvent(
                         ChatUiEvent.ImageSelected(uri)
                     )
                 }
@@ -171,7 +226,7 @@ fun ChatScreen(
                     IconButton(
                         onClick = {
 
-                            onEvent(
+                            viewModel.onEvent(
                                 ChatUiEvent.BackClicked
                             )
                         }
@@ -263,7 +318,7 @@ fun ChatScreen(
 
                         onClick = {
 
-                            onEvent(
+                            viewModel.onEvent(
                                 ChatUiEvent.MessageClicked(
                                     message
                                 )
@@ -359,13 +414,13 @@ fun ChatScreen(
                     text = uiState.messageText,
 
                     onTextChanged = {
-                        onEvent(
+                        viewModel.onEvent(
                             ChatUiEvent.MessageTextChanged(it)
                         )
                     },
 
                     onSend = {
-                        onEvent(
+                        viewModel.onEvent(
                             ChatUiEvent.SendMessageClicked
                         )
                     }

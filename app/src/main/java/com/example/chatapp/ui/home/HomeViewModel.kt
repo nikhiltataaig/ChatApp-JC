@@ -2,14 +2,20 @@ package com.example.chatapp.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapp.AppRoutes
+import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.data.repository.AuthRepository
 import com.example.chatapp.data.repository.ChatRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.internal.ChannelFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 @HiltViewModel
@@ -21,8 +27,9 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<HomeScreenUiEvent>()
-    val uiEvent: SharedFlow<HomeScreenUiEvent> = _uiEvent.asSharedFlow()
+    private val _uiEvent = Channel<CommonUiEvent>(Channel.BUFFERED)
+    val uiEvent = _uiEvent.receiveAsFlow()
+
 
     init {
         loadChats()
@@ -31,9 +38,8 @@ class HomeViewModel @Inject constructor(
     private fun loadChats() {
         viewModelScope.launch {
 
-            _uiState.value = _uiState.value.copy(
-                isLoading = true
-            )
+
+
 
             chatRepository.observeActiveChats { result ->
 
@@ -43,19 +49,12 @@ class HomeViewModel @Inject constructor(
 
                         val chats = result.getOrNull() ?: emptyList()
 
-                        _uiState.value = HomeUiState(
-                            isLoading = false,
-                            chats = chats
-                        )
 
                     } else {
 
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false
-                        )
 
-                        _uiEvent.emit(
-                            HomeScreenUiEvent.ShowError(
+                        _uiEvent.send(
+                            CommonUiEvent.ShowError(
                                 result.exceptionOrNull()?.message
                                     ?: "Failed to load chats"
                             )
@@ -69,39 +68,46 @@ class HomeViewModel @Inject constructor(
 
 
 
-    fun onEvent(event: HomeScreenUiEvent) {
+    fun onEvent(event: HomeScreenEvent) {
 
         when (event) {
 
-            is HomeScreenUiEvent.NavigateToChat -> {
+
+            is HomeScreenEvent.NavigateToChat -> {
+
                 viewModelScope.launch {
-                    _uiEvent.emit(
-                        HomeScreenUiEvent.NavigateToChat(
+                    _uiEvent.send(CommonUiEvent.ShowLoader)
+
+                    _uiEvent.send(
+                        CommonUiEvent.Navigate(
+                            AppRoutes.ChatRoute(
                             chatId = event.chatId,
                             userId = event.userId,
                             userName = event.userName,
-                            profileImageUrl = event.profileImageUrl
+                            profileImageUrl = event.profileImageUrl)
                         )
                     )
 
                 }
             }
 
-            HomeScreenUiEvent.NavigateToNewChat -> {
-                viewModelScope.launch {
-                    _uiEvent.emit(
-                        HomeScreenUiEvent.NavigateToNewChat
-                    )
-                }
+            HomeScreenEvent.NavigateToNewChat -> {
+
+//               NavigateToNewChat viewModelScope.launch {
+//                    _uiEvent.send(
+//
+//                    )
+//                }
             }
 
-            HomeScreenUiEvent.LogoutClicked -> {
+            HomeScreenEvent.LogoutClicked -> {
                 viewModelScope.launch {
+                    _uiEvent.send(CommonUiEvent.ShowLoader)
 
                     authRepository.logout()
 
-                    _uiEvent.emit(
-                        HomeScreenUiEvent.NavigateToLogin
+                    _uiEvent.send(
+                        CommonUiEvent.Navigate(AppRoutes.LoginRoute)
                     )
                 }
             }

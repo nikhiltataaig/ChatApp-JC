@@ -3,13 +3,17 @@ package com.example.chatapp.ui.chat
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapp.AppRoutes
+import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.data.models.Message
 import com.example.chatapp.data.repository.MessageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,10 +31,10 @@ class ChatViewModel @Inject constructor(
 
 
     private val _uiEvent =
-        MutableSharedFlow<ChatUiEvent>()
+        Channel<CommonUiEvent>()
 
     val uiEvent =
-        _uiEvent.asSharedFlow()
+        _uiEvent.receiveAsFlow()
 
 
     private var chatId: String? = null
@@ -57,12 +61,7 @@ class ChatViewModel @Inject constructor(
         chatId: String
     ) {
 
-        _uiState.update {
-            it.copy(
-                isLoading = true,
-                errorMessage = null
-            )
-        }
+
 
         messageRepository.observeMessages(
             chatId = chatId
@@ -74,7 +73,7 @@ class ChatViewModel @Inject constructor(
                     _uiState.update {
 
                         it.copy(
-                            isLoading = false,
+
                             messages = messages,
                             errorMessage = null
                         )
@@ -85,7 +84,7 @@ class ChatViewModel @Inject constructor(
                     _uiState.update {
 
                         it.copy(
-                            isLoading = false,
+
                             errorMessage =
                                 exception.message
                                     ?: "Unable to load messages."
@@ -145,12 +144,11 @@ class ChatViewModel @Inject constructor(
             }
 
 
-            ChatUiEvent.BackClicked -> {
-
-                emitUiEvent(
-                    ChatUiEvent.BackClicked
-                )
-            }
+            is ChatUiEvent.BackClicked -> {
+                viewModelScope.launch {
+                    _uiEvent.send(CommonUiEvent.Navigate(AppRoutes.HomeRoute))
+                }
+                }
         }
     }
 
@@ -302,13 +300,5 @@ class ChatViewModel @Inject constructor(
     }
 
 
-    private fun emitUiEvent(
-        event: ChatUiEvent
-    ) {
 
-        viewModelScope.launch {
-
-            _uiEvent.emit(event)
-        }
-    }
 }

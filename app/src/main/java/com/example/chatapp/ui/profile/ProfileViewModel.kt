@@ -2,14 +2,18 @@ package com.example.chatapp.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapp.AppRoutes
+import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.data.models.User
 import com.example.chatapp.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,10 +32,10 @@ class ProfileViewModel @Inject constructor(
 
 
     private val _uiEvents =
-        MutableSharedFlow<ProfileUiEvent>()
+        Channel<CommonUiEvent>()
 
     val uiEvents =
-        _uiEvents.asSharedFlow()
+        _uiEvents.receiveAsFlow()
 
 
     fun onEvent(event: ProfileUiEvent) {
@@ -73,17 +77,7 @@ class ProfileViewModel @Inject constructor(
                 }
             }
 
-
-            ProfileUiEvent.ProfileCreated -> {
-                // Output event.
-                // Do not call this from the UI.
-            }
-
-
-            is ProfileUiEvent.ShowToast -> {
-                // Output event.
-                // Do not call this from the UI.
-            }
+            else -> {}
         }
     }
 
@@ -94,13 +88,11 @@ class ProfileViewModel @Inject constructor(
             firebaseAuth.currentUser
 
         if (firebaseUser == null) {
+            viewModelScope.launch {
 
-            emitUiEvent(
-                ProfileUiEvent.ShowToast(
-                    "User session expired. Please login again."
-                )
-            )
+                _uiEvents.send(CommonUiEvent.ShowToast("User session expired. Please login again."))
 
+            }
             return
         }
 
@@ -109,8 +101,9 @@ class ProfileViewModel @Inject constructor(
 
             _uiState.update {
 
+                _uiEvents.send(CommonUiEvent.ShowLoader)
                 it.copy(
-                    isLoading = true,
+
                     errorMessage = null
                 )
             }
@@ -144,7 +137,6 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
 
                         it.copy(
-                            isLoading = false,
                             errorMessage =
                                 uploadResult
                                     .exceptionOrNull()
@@ -181,21 +173,18 @@ class ProfileViewModel @Inject constructor(
                     _uiState.update {
 
                         it.copy(
-                            isLoading = false,
                             errorMessage = null
                         )
                     }
 
-                    emitUiEvent(
-                        ProfileUiEvent.ProfileCreated
-                    )
+                    _uiEvents.send(CommonUiEvent.Navigate(AppRoutes.HomeRoute))
                 }
                 .onFailure { exception ->
+
 
                     _uiState.update {
 
                         it.copy(
-                            isLoading = false,
                             errorMessage =
                                 exception.message
                                     ?: "Unable to save profile."
@@ -206,13 +195,4 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    private fun emitUiEvent(
-        event: ProfileUiEvent
-    ) {
-
-        viewModelScope.launch {
-
-            _uiEvents.emit(event)
-        }
-    }
 }

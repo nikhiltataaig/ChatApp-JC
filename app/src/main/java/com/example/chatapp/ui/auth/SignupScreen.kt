@@ -1,5 +1,7 @@
 package com.example.chatapp.ui.auth
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,41 +20,67 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.chatapp.AppRoutes
+import com.example.chatapp.CommonUiEvent
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignupScreen(
-    uiState: AuthUiState,
-    onEvent: (AuthEvent) -> Unit,
-    onLoginClick: () -> Unit,
-    onSignupSuccess: () -> Unit,
+    navController: NavController,
+    authViewModel: AuthViewModel,
     modifier: Modifier
 ) {
 
-    var email by remember {
-        mutableStateOf("")
-    }
+    val showLoader = remember  { mutableStateOf(false) }
 
-    var password by remember {
-        mutableStateOf("")
-    }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val context  = LocalContext.current
+    val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
 
-    var confirmPassword by remember {
-        mutableStateOf("")
-    }
+    LaunchedEffect(Unit) {
+        authViewModel.uiEvent.flowWithLifecycle(lifecycleOwner.lifecycle, Lifecycle.State.CREATED).collect{ event ->
+            showLoader.value = false;
+            when(event){
+            is CommonUiEvent.Navigate ->{
+            if (event.route is AppRoutes.SetupProfileRoute) {
+                navController.navigate(event.route){
+                    popUpTo(AppRoutes.LoginRoute){
+                        inclusive = true
+                    }
+                }
+            }else{
+                navController.navigate(event.route)
+            }
 
-    LaunchedEffect(uiState.isLoggedIn) {
-
-        if (uiState.isLoggedIn) {
-            onSignupSuccess()
         }
+            is CommonUiEvent.ShowToast ->
+            Toast.makeText(context,event.msg, Toast.LENGTH_SHORT).show()
+            is CommonUiEvent.ShowLoader ->{ showLoader.value = true}
+            is CommonUiEvent.DoNothing -> {
+                Log.d("SignupScreen","DoNothing Called")
+                showLoader.value = false
+            }
+
+            else -> {}
+        }
+
+        }
+
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement =
@@ -69,12 +97,9 @@ fun SignupScreen(
         )
 
         OutlinedTextField(
-            value = email,
+            value = uiState.email,
             onValueChange = {
-
-                email = it
-
-                onEvent(
+                authViewModel.onEvent(
                     AuthEvent.EmailChanged(it)
                 )
             },
@@ -83,7 +108,7 @@ fun SignupScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         )
 
         Spacer(
@@ -91,12 +116,9 @@ fun SignupScreen(
         )
 
         OutlinedTextField(
-            value = password,
+            value = uiState.password,
             onValueChange = {
-
-                password = it
-
-                onEvent(
+                authViewModel.onEvent(
                     AuthEvent.PasswordChanged(it)
                 )
             },
@@ -107,7 +129,7 @@ fun SignupScreen(
                 PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         )
 
         Spacer(
@@ -115,12 +137,9 @@ fun SignupScreen(
         )
 
         OutlinedTextField(
-            value = confirmPassword,
+            value = uiState.confirmPassword,
             onValueChange = {
-
-                confirmPassword = it
-
-                onEvent(
+                authViewModel.onEvent(
                     AuthEvent.ConfirmPasswordChanged(it)
                 )
             },
@@ -131,7 +150,7 @@ fun SignupScreen(
                 PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         )
 
         Spacer(
@@ -140,16 +159,15 @@ fun SignupScreen(
 
         Button(
             onClick = {
-
-                onEvent(
+                authViewModel.onEvent(
                     AuthEvent.SignupClicked
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         ) {
 
-            if (uiState.isLoading) {
+            if (showLoader.value ) {
 
                 CircularProgressIndicator()
 
@@ -160,8 +178,8 @@ fun SignupScreen(
         }
 
         TextButton(
-            onClick = onLoginClick,
-            enabled = !uiState.isLoading
+            onClick = { authViewModel.onEvent(AuthEvent.LoginClicked) },
+            enabled = !showLoader.value
         ) {
 
             Text(

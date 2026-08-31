@@ -1,9 +1,8 @@
-package com.example.chatapp.ui.auth
+package com.example.chatapp.ui.login
 
 
-data class AuthUiState(
+data class LoginUiState(
     val email: String = "",
     val password: String = "",
-    val confirmPassword: String = "",
     val errorMessage: String? = null
 )

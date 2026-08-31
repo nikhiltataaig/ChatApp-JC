@@ -19,7 +19,5 @@ sealed interface AuthEvent {
 
     data object SignupClicked : AuthEvent
 
-    data object LogoutClicked : AuthEvent
-
     data object ClearError : AuthEvent
 }

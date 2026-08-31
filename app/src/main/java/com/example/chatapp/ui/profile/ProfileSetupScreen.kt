@@ -21,20 +21,66 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.example.chatapp.CommonUiEvent
+import com.example.chatapp.ui.home.HomeScreenEvent
+import com.example.chatapp.ui.login.LoginScreenViewModel
 
 @Composable
 fun ProfileSetupScreen(
-    uiState: ProfileUiState,
-    onEvent: (ProfileUiEvent) -> Unit,
-    onProfileSaved: () -> Unit,
-    modifier: Modifier
+
+    navController: NavController,
+    profileViewModel: ProfileViewModel
 ) {
+
+    val uiState by
+    profileViewModel.uiState
+        .collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val showLoader = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+
+        profileViewModel.uiEvents.flowWithLifecycle(
+            lifecycleOwner.lifecycle,
+            Lifecycle.State.CREATED
+        ).collect { event ->
+            showLoader.value = false
+            when (event) {
+
+                is CommonUiEvent.Navigate -> {
+                    navController.navigate(
+                        event.route
+                    )
+                }
+
+                is CommonUiEvent.ShowLoader ->{
+                    showLoader.value = true
+                }
+
+                is CommonUiEvent.PopBackStack -> {
+                    navController.popBackStack()
+                }
+
+                else -> Unit
+            }
+        }
+    }
 
     val imagePicker =
         rememberLauncherForActivityResult(
@@ -43,7 +89,7 @@ fun ProfileSetupScreen(
 
             uri?.let {
 
-                onEvent(
+                profileViewModel.onEvent(
                     ProfileUiEvent.ImageSelected(it)
                 )
             }
@@ -77,7 +123,7 @@ fun ProfileSetupScreen(
                     MaterialTheme.colorScheme.surfaceVariant
                 )
                 .clickable(
-                    enabled = !uiState.isLoading
+                    enabled = !showLoader.value
                 ) {
 
                     imagePicker.launch("image/*")
@@ -112,7 +158,7 @@ fun ProfileSetupScreen(
             value = uiState.name,
             onValueChange = {
 
-                onEvent(
+                profileViewModel.onEvent(
                     ProfileUiEvent.NameChanged(it)
                 )
             },
@@ -121,7 +167,7 @@ fun ProfileSetupScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         )
 
 
@@ -132,17 +178,15 @@ fun ProfileSetupScreen(
 
         Button(
             onClick = {
-
-                onEvent(
+                profileViewModel.onEvent(
                     ProfileUiEvent.SaveProfileClicked
                 )
-                onProfileSaved()
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isLoading
+            enabled = !showLoader.value
         ) {
 
-            if (uiState.isLoading) {
+            if (showLoader.value) {
 
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp)

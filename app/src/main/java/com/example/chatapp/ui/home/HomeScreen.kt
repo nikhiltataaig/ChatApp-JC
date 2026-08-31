@@ -10,13 +10,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,17 +21,67 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.chatapp.ui.components.ChatListItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Logout
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.navigation.NavHostController
+import com.example.chatapp.CommonUiEvent
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    uiState: HomeUiState,
-    onEvent: (HomeScreenUiEvent) -> Unit
+    homeViewModel: HomeViewModel,
+    onEvent: (HomeScreenEvent) -> Unit,
+    navController: NavHostController,
 ) {
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val showLoader = remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+
+        homeViewModel.uiEvent.flowWithLifecycle(
+            lifecycleOwner.lifecycle,
+            Lifecycle.State.STARTED
+        ).collect { event ->
+            showLoader.value = false
+            when (event) {
+
+                is CommonUiEvent.Navigate -> {
+                    navController.navigate(
+                        event.route
+                    )
+                }
+
+                is CommonUiEvent.ShowLoader ->{
+                    showLoader.value = true
+                }
+
+                is CommonUiEvent.PopBackStack -> {
+                    navController.popBackStack()
+                }
+
+                HomeScreenEvent.NavigateToNewChat -> {
+                    navController.navigate("new_chat")
+                }
+
+                HomeScreenEvent.NavigateToLogin -> {
+                    navController.navigate("login")
+                }
+
+                else -> Unit
+            }
+        }
+    }
 
     Scaffold(
 
@@ -51,7 +98,7 @@ fun HomeScreen(
                     IconButton(
                         onClick = {
                             onEvent(
-                                HomeScreenUiEvent.LogoutClicked
+                                HomeScreenEvent.LogoutClicked
                             )
                         }
                     ) {
@@ -67,25 +114,25 @@ fun HomeScreen(
             )
         },
 
-        floatingActionButton = {
-
-            FloatingActionButton(
-                onClick = {
-
-                    onEvent(
-                        HomeScreenUiEvent.NavigateToNewChat
-                    )
-                }
-            ) {
-
-                Icon(
-                    imageVector =
-                        Icons.Default.Add,
-                    contentDescription =
-                        "New chat"
-                )
-            }
-        }
+//        floatingActionButton = {
+//
+//            FloatingActionButton(
+//                onClick = {
+//
+//                    onEvent(
+//                        HomeScreenUiEvent.NavigateToNewChat
+//                    )
+//                }
+//            ) {
+//
+//                Icon(
+//                    imageVector =
+//                        Icons.Default.Add,
+//                    contentDescription =
+//                        "New chat"
+//                )
+//            }
+//        }
 
     ) { paddingValues ->
 
@@ -97,7 +144,7 @@ fun HomeScreen(
 
             when {
 
-                uiState.isLoading -> {
+                showLoader.value -> {
 
                     CircularProgressIndicator(
                         modifier =
@@ -131,7 +178,7 @@ fun HomeScreen(
                                 onClick = {
 
                                     onEvent(
-                                        HomeScreenUiEvent.NavigateToChat(
+                                        HomeScreenEvent.NavigateToChat(
                                             chat.chatId,
                                          chat.user.uid ,
                                          chat.lastMessage,

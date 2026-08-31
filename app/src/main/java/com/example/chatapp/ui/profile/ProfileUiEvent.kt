@@ -18,7 +18,5 @@ sealed interface ProfileUiEvent {
 
     data object ProfileCreated : ProfileUiEvent
 
-    data class ShowToast(
-        val message: String
-    ) : ProfileUiEvent
+
 }
