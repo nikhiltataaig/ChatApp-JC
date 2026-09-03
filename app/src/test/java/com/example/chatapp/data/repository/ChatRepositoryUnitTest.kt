@@ -213,50 +213,46 @@ class ChatRepositoryUnitTest {
 
 
 //
-//    @Test
-//    fun createChat_when_firestore_throws_returns_failure() = runTest {
-//
-//        // Arrange
-//        val currentUser = mockk<FirebaseUser>()
-//        val collection = mockk<CollectionReference>()
-//        val query = mockk<Query>()
-//
-//        val exception = Exception("Firestore error")
-//
-//        every {
-//            firebaseAuth.currentUser
-//        } returns currentUser
-//
-//        every {
-//            currentUser.uid
-//        } returns "user123"
-//
-//        every {
-//            firestore.collection("chats")
-//        } returns collection
-//
-//        every {
-//            collection.whereArrayContains(
-//                "participants",
-//                "user123"
-//            )
-//        } returns query
-//
-//        every {
-//            query.get()
-//        } returns Tasks.forException(exception)
-//
-//        // Act
-//        val result = repository.createChat("user456")
-//
-//        // Assert
-//        assertTrue(result.isFailure)
-//
-//        assertEquals(
-//            exception,
-//            result.exceptionOrNull()
-//        )
-//    }
+    @Test
+    fun createChat_when_firestore_throws_returns_failure() = runTest {
+
+        // Arrange
+        val currentUser = mockk<FirebaseUser>()
+        val collection = mockk<CollectionReference>()
+        val query = mockk<Query>()
+
+        val exception = Exception("Firestore error")
+
+        every {
+            firebaseAuth.currentUser
+        } returns currentUser
+
+        every {
+            currentUser.uid
+        } returns "user123"
+
+        every {
+            firestore.collection("chats")
+        } returns collection
+
+        every {
+            collection.whereArrayContains(
+                "participants",
+                "user123"
+            )
+        } returns query
+
+        every {
+            query.get()
+        } returns Tasks.forException(exception)
+
+        // Act
+        val result = repository.createChat("user456")
+
+        // Assert
+        assertTrue(result.isFailure)
+
+    }
 
 
 
