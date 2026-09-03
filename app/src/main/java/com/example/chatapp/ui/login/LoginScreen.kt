@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -30,13 +31,15 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.NavController
 import com.example.chatapp.AppRoutes
 import com.example.chatapp.CommonUiEvent
+import com.example.chatapp.utils.Constant.EMAIL_TEXT_FIELD
+import com.example.chatapp.utils.Constant.PASSWORD_TEXT_FIELD
 
 
 @Composable
 fun LoginScreen(
     loginViewModel: LoginScreenViewModel,
     navController: NavController,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     val showLoader = remember { mutableStateOf(false) };
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
@@ -110,7 +113,7 @@ fun LoginScreen(
             label = {
                 Text("Email")
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(EMAIL_TEXT_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )
@@ -131,7 +134,7 @@ fun LoginScreen(
             },
             visualTransformation =
                 PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(PASSWORD_TEXT_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )

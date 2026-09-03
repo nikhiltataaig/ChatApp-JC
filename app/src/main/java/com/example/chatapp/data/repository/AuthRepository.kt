@@ -10,9 +10,7 @@ class AuthRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth
 ) {
 
-    fun getCurrentUser(): FirebaseUser? {
-        return firebaseAuth.currentUser
-    }
+
 
     suspend fun login(
         email: String,

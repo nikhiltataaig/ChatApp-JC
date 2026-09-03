@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
@@ -54,6 +55,10 @@ import com.example.chatapp.AppRoutes
 import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.ui.components.MessageInput
 import com.example.chatapp.ui.components.MessageItem
+import com.example.chatapp.utils.Constant.CHAT_BACK_BUTTON
+import com.example.chatapp.utils.Constant.CHAT_MESSAGE_LIST
+import com.example.chatapp.utils.Constant.CHAT_SELECT_IMAGE_BUTTON
+import com.example.chatapp.utils.Constant.CHAT_TAKE_PHOTO_BUTTON
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -229,7 +234,8 @@ fun ChatScreen(
                             viewModel.onEvent(
                                 ChatUiEvent.BackClicked
                             )
-                        }
+                        },
+                        modifier = Modifier.testTag(CHAT_BACK_BUTTON)
                     ) {
 
                         Icon(
@@ -293,7 +299,8 @@ fun ChatScreen(
             LazyColumn(
 
                 modifier =
-                    Modifier.weight(1f),
+                    Modifier.weight(1f)
+                        .testTag(CHAT_MESSAGE_LIST),
 
                 state =
                     listState,
@@ -377,7 +384,8 @@ fun ChatScreen(
                     onClick = {
                         imagePicker.launch("image/*")
                     },
-                    enabled = !uiState.isSending
+                    enabled = !uiState.isSending,
+                    modifier = Modifier.testTag(CHAT_SELECT_IMAGE_BUTTON)
                 ) {
 
                     Icon(
@@ -396,7 +404,8 @@ fun ChatScreen(
                             Manifest.permission.CAMERA
                         )
                     },
-                    enabled = !uiState.isSending
+                    enabled = !uiState.isSending,
+                    modifier = Modifier.testTag(CHAT_TAKE_PHOTO_BUTTON)
                 ) {
 
                     Icon(

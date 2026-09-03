@@ -18,6 +18,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.chatapp.ui.components.ChatListItem
 import androidx.compose.material.icons.Icons
@@ -33,6 +34,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.chatapp.CommonUiEvent
+import com.example.chatapp.utils.Constant.HOME_CHAT_LIST
+import com.example.chatapp.utils.Constant.HOME_EMPTY_STATE
+import com.example.chatapp.utils.Constant.HOME_LOGOUT_BUTTON
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +104,8 @@ fun HomeScreen(
                             onEvent(
                                 HomeScreenEvent.LogoutClicked
                             )
-                        }
+                        },
+                        modifier = Modifier.testTag(HOME_LOGOUT_BUTTON)
                     ) {
 
                         Icon(
@@ -156,7 +161,7 @@ fun HomeScreen(
 
                 uiState.chats.isEmpty() -> {
 
-                    EmptyChats()
+                    EmptyChats(modifier = Modifier.testTag(HOME_EMPTY_STATE))
                 }
 
                 else -> {
@@ -164,6 +169,7 @@ fun HomeScreen(
                     LazyColumn(
                         modifier =
                             Modifier.fillMaxSize()
+                                .testTag(HOME_CHAT_LIST)
                     ) {
 
                         items(
@@ -179,12 +185,12 @@ fun HomeScreen(
 
                                     onEvent(
                                         HomeScreenEvent.NavigateToChat(
-                                            chat.chatId,
-                                         chat.user.uid ,
-                                         chat.lastMessage,
-                                         chat.lastMessageTime.toString()
-                                    )
+                                            chatId = chat.chatId,
+                                            userId = chat.user.uid,
+                                            userName = chat.user.name,
+                                            profileImageUrl = chat.user.profileImageUrl
                                         )
+                                    )
 
                                 }
                             )
@@ -197,10 +203,10 @@ fun HomeScreen(
 }
 
 @Composable
-private fun EmptyChats() {
+private fun EmptyChats(modifier: Modifier = Modifier) {
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment =

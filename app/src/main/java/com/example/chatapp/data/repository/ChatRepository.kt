@@ -12,7 +12,6 @@ import javax.inject.Inject
 class ChatRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
-    private val userRepository: UserRepository
 ) {
 
     private val chatsCollection =

@@ -49,6 +49,9 @@ class HomeViewModel @Inject constructor(
 
                         val chats = result.getOrNull() ?: emptyList()
 
+                        _uiState.value = _uiState.value.copy(
+                            chats = chats
+                        )
 
                     } else {
 

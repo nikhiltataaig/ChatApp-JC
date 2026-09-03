@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -40,6 +41,9 @@ import coil3.compose.AsyncImage
 import com.example.chatapp.CommonUiEvent
 import com.example.chatapp.ui.home.HomeScreenEvent
 import com.example.chatapp.ui.login.LoginScreenViewModel
+import com.example.chatapp.utils.Constant.PROFILE_CONTINUE_BUTTON
+import com.example.chatapp.utils.Constant.PROFILE_IMAGE_BOX
+import com.example.chatapp.utils.Constant.PROFILE_NAME_FIELD
 
 @Composable
 fun ProfileSetupScreen(
@@ -122,6 +126,7 @@ fun ProfileSetupScreen(
                 .background(
                     MaterialTheme.colorScheme.surfaceVariant
                 )
+                .testTag(PROFILE_IMAGE_BOX)
                 .clickable(
                     enabled = !showLoader.value
                 ) {
@@ -165,7 +170,7 @@ fun ProfileSetupScreen(
             label = {
                 Text("Your Name")
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(PROFILE_NAME_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )
@@ -182,7 +187,7 @@ fun ProfileSetupScreen(
                     ProfileUiEvent.SaveProfileClicked
                 )
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(PROFILE_CONTINUE_BUTTON),
             enabled = !showLoader.value
         ) {
 

@@ -110,11 +110,11 @@ class AuthViewModel @Inject constructor(
                 )
 
             if (result.isSuccess) {
-                Log.d("AuthViewModel","result success called => $result")
+               // Log.d("AuthViewModel","result success called => $result")
                 _uiEvent.send(CommonUiEvent.Navigate(AppRoutes.SetupProfileRoute))
             } else {
                 _uiEvent.send(CommonUiEvent.DoNothing)
-                Log.d("AuthViewModel","result error called => $result")
+              //  Log.d("AuthViewModel","result error called => $result")
                 showError(
                     result.exceptionOrNull()
                         ?.message

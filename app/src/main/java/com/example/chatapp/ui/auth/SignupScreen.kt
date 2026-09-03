@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -33,6 +34,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.chatapp.AppRoutes
 import com.example.chatapp.CommonUiEvent
+import com.example.chatapp.utils.Constant.CONFIRM_PASSWORD_TEXT_FIELD
+import com.example.chatapp.utils.Constant.EMAIL_TEXT_FIELD
+import com.example.chatapp.utils.Constant.PASSWORD_TEXT_FIELD
+import com.example.chatapp.utils.Constant.SIGNUP_BUTTON
 import kotlinx.coroutines.launch
 
 @Composable
@@ -106,7 +111,7 @@ fun SignupScreen(
             label = {
                 Text("Email")
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(EMAIL_TEXT_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )
@@ -127,7 +132,7 @@ fun SignupScreen(
             },
             visualTransformation =
                 PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(PASSWORD_TEXT_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )
@@ -148,7 +153,7 @@ fun SignupScreen(
             },
             visualTransformation =
                 PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(CONFIRM_PASSWORD_TEXT_FIELD),
             singleLine = true,
             enabled = !showLoader.value
         )
@@ -163,7 +168,7 @@ fun SignupScreen(
                     AuthEvent.SignupClicked
                 )
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(SIGNUP_BUTTON),
             enabled = !showLoader.value
         ) {
 
